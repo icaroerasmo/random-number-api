@@ -1,10 +1,17 @@
 package com.example.randomnumberapi.api;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -12,12 +19,32 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = "app.storage.file=target/test-number-store")
 @AutoConfigureMockMvc
 class RandomNumberControllerTest {
 
+    private static final Path TEST_STORAGE_DIR = Path.of("target/test-number-store");
+
     @Autowired
     private MockMvc mockMvc;
+
+    @BeforeEach
+    void cleanStorage() throws IOException {
+        if (!Files.exists(TEST_STORAGE_DIR)) {
+            return;
+        }
+
+        try (Stream<Path> paths = Files.walk(TEST_STORAGE_DIR)) {
+            paths.sorted(Comparator.reverseOrder())
+                .forEach(path -> {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (IOException e) {
+                        throw new IllegalStateException("Failed to clean test storage path: " + path, e);
+                    }
+                });
+        }
+    }
 
     @Test
     void shouldGenerateAndRetrieveByLabel() throws Exception {
@@ -46,5 +73,4 @@ class RandomNumberControllerTest {
             .andExpect(status().isNotFound());
     }
 }
-
 

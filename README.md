@@ -1,6 +1,6 @@
 # Random Number API
 
-Tiny Spring Boot API that stores the latest generated random number in a local file at project root.
+Tiny Spring Boot API that stores generated random numbers in daily files.
 
 ## Endpoints
 
@@ -20,10 +20,16 @@ Response format:
 }
 ```
 
-The persisted file is `latest-number.txt` using `label=value` entries.
+Persistence behavior:
 
-- Local run (Maven): defaults to `./latest-number.txt`.
-- Docker run: defaults to `/app/numbers/latest-number.txt` via `APP_STORAGE_FILE`.
+- Numbers are stored in per-day files (`YYYY-MM-DD.properties`).
+- Entries include value + timestamp and are valid for 24 hours.
+- Cleanup runs asynchronously after each `GET /new` request:
+  - removes records older than 24h
+  - removes daily files that become empty
+
+- Local run (Maven): defaults to `./numbers`.
+- Docker run: defaults to `/app/numbers` via `APP_STORAGE_FILE`.
 
 ## Run locally
 
@@ -47,7 +53,6 @@ docker run --rm -p 8080:8080 --name random-number-api \
   random-number-api
 ```
 
-You can edit `./numbers/latest-number.txt` from the host while the container is running.
-
+You can inspect the generated `./numbers/YYYY-MM-DD.properties` files from the host while the container is running.
 
 

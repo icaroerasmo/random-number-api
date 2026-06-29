@@ -21,6 +21,7 @@ public class RandomNumberService {
         int generated = (int) ThreadLocalRandom.current().nextLong(min, (long) max + 1L);
         log.debug("Generated number={} for label='{}' in range [{}, {}]", generated, label, min, max);
         latestNumberFileStore.write(label, generated);
+        latestNumberFileStore.triggerCleanupAsync();
         return generated;
     }
 
